@@ -1,9 +1,13 @@
+import processing.pdf.*;
+import processing.svg.*;
+
 float cpBoundingBoxWidth = 100;
 float cpBoundingBoxHeight = 100;
 float endpointBoundingBoxDefaultWidth = 100;
 float endpointBoundingBoxDefaultHeight = 100;
 float traveledByMouseThreshold = 10;
 float traveledByMouseBaseStepSize = 15;
+float alphaDecreaseRate = 2;
 
 public class Point {
   public float x;
@@ -39,19 +43,26 @@ void setup() {
   background(255);
   smooth();
   // noFill();
+  // beginRecord(SVG, "wavy-line.svg");
+  // beginRecord(PDF, "wavy-line.pdf");
 }
 
-void draw() {  
-  // background(255);
-  for (int i = 0; i < curves.size(); i++) {    
-    drawCurve(curves.get(i));
-  }
+void draw() {
+  
 }
 
 void mouseMoved() {
   if (traveledByMouse >= traveledByMouseThreshold) {
     addCurve();
     traveledByMouse = 0;
+    background(255);
+    for (int i = 0; i < curves.size() / 2; i++) {
+      println("DRAW TWEAKED");
+      drawTweakedCurve(curves.get(i), i);
+    }
+    for (int i = curves.size() / 2; i < curves.size(); i++) {    
+      drawCurve(curves.get(i));
+    }
   }
   endpointBoundingBoxWidth = endpointBoundingBoxDefaultWidth;
   endpointBoundingBoxHeight = endpointBoundingBoxDefaultHeight;
@@ -92,6 +103,21 @@ void drawCurve(Curve curve) {
   ellipse(curve.cp2.x, curve.cp2.y, 2, 2);
 }
 
+void drawTweakedCurve(Curve curve, int index) {
+  stroke(0);
+  alpha(int(255 * float(index) / float(curves.size())));
+  
+  print("ALPHA", int(100 * float(index) / float(curves.size())));
+  
+  curve(curve.cp1.x, curve.cp1.y,
+        curve.startPoint.x, curve.startPoint.y,
+        curve.endPoint.x, curve.endPoint.y,
+        curve.cp2.x, curve.cp2.y);
+  fill(255, 105, 180);
+  ellipse(curve.cp1.x, curve.cp1.y, 2, 2);
+  ellipse(curve.cp2.x, curve.cp2.y, 2, 2);
+}
+
 Point getRandomPoint(float originX, float originY, float boundingBoxWidth, float boundingBoxHeight) {
   float xMin = max(0, originX - boundingBoxWidth / 2);
   float xMax = min(xMin + boundingBoxWidth, width);
@@ -104,4 +130,11 @@ Point getRandomPoint(float originX, float originY, float boundingBoxWidth, float
   point.x = x;
   point.y = y;
   return point;
+}
+
+void keyPressed() {
+  if (key == ESC) {
+    saveFrame("wavy-line-######.tif");
+    // endRecord();
+  }
 }
