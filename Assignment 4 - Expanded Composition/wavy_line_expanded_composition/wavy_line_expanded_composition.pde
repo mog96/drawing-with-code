@@ -1,9 +1,48 @@
+/**
+ARTSTUDI 163: Drawing with Code
+06 April 12 homework - Expanded Composition - due April 17
+
+Add a rule into your Processing sketch/system that creates a “second order”
+or “emergent” type mark or behavior that is not obvious based on the rule
+you develop. If you are getting tired of your current composition, please
+feel free to build up something new, but it should have all the richness
+of your current sketch!
+
+-----
+
+Author: Mateo Garcia
+Date Submitted: 2017-04-25
+Description:
+
+In this version of my 'wavy-line' program, the mouse no longer controls
+the direction of the line, making the general composition of the
+resulting work 'emergent'. However, movement of the mouse is still required
+to generate the line. Its speed still controls the distance between the
+endpoints of the Catmul-Rom spline curves that comprise the line.
+
+Also new in this version the is code in the 'Preventing Intersecting Lines'
+section, which comprises a failed attempt at preventing new curves added to
+the line from intersecting with the curves that already comprise the line.
+My approach was to check each proposed new curve for whether it intersects
+with any other curve in the line, using the algorithm explained in the
+comments above each function in the 'Preventing Intersecting Lines' section.
+
+Lastly, as can be seen in the 'wavy-line' numbered 7 and up, this version
+noe shifts the center of the bounding bowx for the random endpoint of a new
+curve in the projected direction of the previous curve's endpoints. This
+reduces the randomness of new curves added to the line, as well as their
+abruptness.
+
+*/
+
 import processing.pdf.*;
 
 float kCPBoundingBoxWidth = 100;
 float kCPBoundingBoxHeight = 100;
 float kEndpointBoundingBoxDefaultWidth = 100;
 float kEndpointBoundingBoxDefaultHeight = 100;
+// Multiplies x and y distances between endpoints of last curve to determine center of bounding box of new curve random endpoint.
+float kEndpointBoundingBoxCenterShiftMultiplier = 0.6;
 float kTraveledByMouseThreshold = 20;
 float kTraveledByMouseBaseStepSize = 25;
 
@@ -90,17 +129,18 @@ void addCurve() {
   }
   
   Curve lastCurve = curves.get(curves.size() - 1);
-  newCurve.startPoint = lastCurve.endPoint;
-  newCurve.endPoint = getRandomPoint(lastCurve.endPoint.x, lastCurve.endPoint.y, endpointBoundingBoxWidth, endpointBoundingBoxHeight);
   
-  // TODO: Currently causes sketch to get trapped in upper left corner of screen.
-  /*
-  newCurve.endPoint = getRandomPoint(max(0, lastCurve.endPoint.x - endpointBoundingBoxWidth / 2),
-                                     max(0, lastCurve.endPoint.y - endpointBoundingBoxHeight / 2),
+  newCurve.startPoint = lastCurve.endPoint;
+  
+  // Center of bounding box for random endpoint is shifted in the direction of the preceding curve,
+  // to help direct the line and reduce the abruptness of change in direction.
+  newCurve.endPoint = getRandomPoint(min(max(0, newCurve.startPoint.x + kEndpointBoundingBoxCenterShiftMultiplier * (newCurve.startPoint.x - lastCurve.startPoint.x)), width),
+                                     min(max(0, newCurve.startPoint.y + kEndpointBoundingBoxCenterShiftMultiplier * (newCurve.startPoint.y - lastCurve.startPoint.y)), height),
                                      endpointBoundingBoxWidth,
                                      endpointBoundingBoxHeight);
-  */
-                                     
+  
+  
+  println("ENDPOINT:", newCurve.endPoint.x, newCurve.endPoint.y);   
   
   // TODO: Make sure endpoint doesn't cause new curve to overlap existing curves. (As is, this code takes too long to execute.) 
   /*
@@ -117,9 +157,7 @@ void addCurve() {
                            lastCurve.endPoint.y + (lastCurve.endPoint.y - lastCurve.cp2.y));
   
   newCurve.cp2 = getRandomPoint(newCurve.endPoint.x, newCurve.endPoint.y, kCPBoundingBoxWidth, kCPBoundingBoxHeight);
-  curves.add(newCurve);
-  
-  println("NEW END POINT:", newCurve.endPoint.x, newCurve.endPoint.y);
+  curves.add(newCurve);  
 }
 
 void drawCurve(Curve curve) {
@@ -131,16 +169,14 @@ void drawCurve(Curve curve) {
   // fill(255, 105, 180); // Pink
   fill(83, 145, 234); 
   ellipse(curve.cp1.x, curve.cp1.y, 2, 2);
-  ellipse(curve.cp2.x, curve.cp2.y, 2, 2);
-  
-  println("SHOULD HAVE DRAWN");
+  ellipse(curve.cp2.x, curve.cp2.y, 2, 2);  
 }
 
-Point getRandomPoint(float originX, float originY, float boundingBoxWidth, float boundingBoxHeight) {
-  float xMin = max(0, originX - boundingBoxWidth / 2);
+Point getRandomPoint(float centerX, float centerY, float boundingBoxWidth, float boundingBoxHeight) {
+  float xMin = max(0, centerX - boundingBoxWidth / 2);
   float xMax = min(xMin + boundingBoxWidth, width);
   float x = random(xMin, xMax);
-  float yMin = max(0, originY - boundingBoxHeight / 2);
+  float yMin = max(0, centerY - boundingBoxHeight / 2);
   float yMax = min(yMin + boundingBoxHeight, height);
   float y = random(yMin, yMax);
   
@@ -176,6 +212,8 @@ boolean intersectsExistingCurves(Curve curve) {
 //
 // - (p1, q1, p2) and (p1, q1, q2) have different orientations AND
 // - (p2, q2, p1) and (p2, q2, q1) have different orientations.
+//
+// Source: http://www.geeksforgeeks.org/orientation-3-ordered-points/
 boolean endpointLinesIntersect(Curve curve1, Curve curve2) {
   return (hasClockwiseOrientation(curve1.startPoint, curve1.endPoint, curve2.startPoint)
           != hasClockwiseOrientation(curve1.startPoint, curve1.endPoint, curve2.endPoint))
@@ -183,6 +221,8 @@ boolean endpointLinesIntersect(Curve curve1, Curve curve2) {
              != hasClockwiseOrientation(curve2.startPoint, curve2.endPoint, curve1.endPoint));
 }
 
+// Algorithm found at the below link, on slide 10:
+// http://www.dcs.gla.ac.uk/~pat/52233/slides/Geometry1x1.pdf
 boolean hasClockwiseOrientation(Point p1, Point p2, Point p3) {
   return (p2.y - p1.y) * (p3.x - p2.x) - (p2.x - p1.x) * (p3.y - p2.y) > 0;
 }
