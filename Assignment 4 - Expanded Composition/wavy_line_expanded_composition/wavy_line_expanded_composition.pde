@@ -76,7 +76,10 @@ void addCurve() {
   
   if (curves.isEmpty()) {
     newCurve.startPoint = getRandomPoint(0, 0, width, height);
-    newCurve.endPoint = getRandomPoint(newCurve.startPoint.x, newCurve.startPoint.y, endpointBoundingBoxWidth * 2, endpointBoundingBoxHeight * 2);
+    newCurve.endPoint = getRandomPoint(max(0, newCurve.startPoint.x - endpointBoundingBoxWidth / 2),
+                                     max(0, newCurve.startPoint.y - endpointBoundingBoxHeight / 2),
+                                     endpointBoundingBoxWidth,
+                                     endpointBoundingBoxHeight);
     newCurve.cp1 = getRandomPoint(newCurve.endPoint.x, newCurve.endPoint.y, kCPBoundingBoxWidth, kCPBoundingBoxHeight);
     newCurve.cp2 = getRandomPoint(newCurve.startPoint.x, newCurve.startPoint.y, kCPBoundingBoxWidth, kCPBoundingBoxHeight);
     curves.add(newCurve);
@@ -88,12 +91,24 @@ void addCurve() {
   
   Curve lastCurve = curves.get(curves.size() - 1);
   newCurve.startPoint = lastCurve.endPoint;
+  newCurve.endPoint = getRandomPoint(lastCurve.endPoint.x, lastCurve.endPoint.y, endpointBoundingBoxWidth, endpointBoundingBoxHeight);
   
-  // Make sure endpoint doesn't cause new curve to overlap existing curves. 
+  // TODO: Currently causes sketch to get trapped in upper left corner of screen.
+  /*
+  newCurve.endPoint = getRandomPoint(max(0, lastCurve.endPoint.x - endpointBoundingBoxWidth / 2),
+                                     max(0, lastCurve.endPoint.y - endpointBoundingBoxHeight / 2),
+                                     endpointBoundingBoxWidth,
+                                     endpointBoundingBoxHeight);
+  */
+                                     
+  
+  // TODO: Make sure endpoint doesn't cause new curve to overlap existing curves. (As is, this code takes too long to execute.) 
+  /*
   do {
     newCurve.endPoint = getRandomPoint(max(0, lastCurve.endPoint.x - endpointBoundingBoxWidth / 2),
                                      max(0, lastCurve.endPoint.y - endpointBoundingBoxHeight / 2), endpointBoundingBoxWidth, endpointBoundingBoxHeight);
   } while (intersectsExistingCurves(newCurve)); // NOTE: This check takes O(N) time, where N is number of curves.
+  */
   
   // First control point the of new curve is the reflection of the second control point of the old curve,
   // across the line that passes through the endpoint of the old curve perpendicular to the line between the
