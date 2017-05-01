@@ -1,37 +1,19 @@
 /**
-ARTSTUDI 163: Drawing with Code
-06 April 12 homework - Expanded Composition - due April 17
+ARTSTUDI 163: Motion Exploration
+07 Project #1
+Due 1 May 2017
 
-Add a rule into your Processing sketch/system that creates a “second order”
-or “emergent” type mark or behavior that is not obvious based on the rule
-you develop. If you are getting tired of your current composition, please
-feel free to build up something new, but it should have all the richness
-of your current sketch!
+Your goal for this two-week assignment is to develop a sketch that runs
+as an ever-evolving time based animation, or is used to output a fixed
+linear video file from your sketch.  
 
 -----
 
 Author: Mateo Garcia
-Date Submitted: 2017-04-25
+Date Submitted: 2017-05-01
 Description:
 
-In this version of my 'wavy-line' program, the mouse no longer controls
-the direction of the line, making the general composition of the
-resulting work 'emergent'. However, movement of the mouse is still required
-to generate the line. Its speed still controls the distance between the
-endpoints of the Catmul-Rom spline curves that comprise the line.
-
-Also new in this version the is code in the 'Preventing Intersecting Lines'
-section, which comprises a failed attempt at preventing new curves added to
-the line from intersecting with the curves that already comprise the line.
-My approach was to check each proposed new curve for whether it intersects
-with any other curve in the line, using the algorithm explained in the
-comments above each function in the 'Preventing Intersecting Lines' section.
-
-Lastly, as can be seen in the 'wavy-line' numbered 7 and up, this version
-noe shifts the center of the bounding bowx for the random endpoint of a new
-curve in the projected direction of the previous curve's endpoints. This
-reduces the randomness of new curves added to the line, as well as their
-abruptness.
+//
 
 */
 
@@ -45,6 +27,8 @@ float kEndpointBoundingBoxDefaultHeight = 100;
 float kEndpointBoundingBoxCenterShiftMultiplier = 0.6;
 float kTraveledByMouseThreshold = 20;
 float kTraveledByMouseBaseStepSize = 25;
+
+int kNumLinesToDraw = 1000;
 
 public class Point {
   public float x;
@@ -68,24 +52,22 @@ public class Curve {
   public Point cp2;
 }
 
-float traveledByMouse = 0;
 float endpointBoundingBoxWidth = kEndpointBoundingBoxDefaultWidth;
 float endpointBoundingBoxHeight = kEndpointBoundingBoxDefaultHeight;
 ArrayList<Curve> curves;
+
+int linesDrawn = 0;
 
 void setup() {
   curves = new ArrayList<Curve>();
   size(700, 700);
   background(255);
-  smooth();
+  frameRate(30);
 }
 
-void draw() {}
-
-void mouseMoved() {  
-  if (traveledByMouse >= kTraveledByMouseThreshold) {
+void draw() {
+  if (linesDrawn < kNumLinesToDraw) {
     addCurve();
-    traveledByMouse = 0;
     background(255);
     
     beginRecord(PDF, "wavy-line.pdf");          // NOTE: MUST RENAME SAVED PDF TO AVOID IT BEING OVERWRITTEN BY FUTURE PROGRAM EXECUTION
@@ -93,18 +75,22 @@ void mouseMoved() {
       drawCurve(curves.get(i));
     }
     endRecord();
-  }
-  
-  // Bounding box of random endpoint is larger if cursor is moving faster.
-  // This makes curves larger when cursor speed is faster.
-  endpointBoundingBoxWidth = kEndpointBoundingBoxDefaultWidth;
-  endpointBoundingBoxHeight = kEndpointBoundingBoxDefaultHeight;
-  float traveled = dist(pmouseX, pmouseY, mouseX, mouseY);
-  float boundMultiplier = .5 + (traveled / kTraveledByMouseBaseStepSize) / 2;
-  endpointBoundingBoxWidth = kEndpointBoundingBoxDefaultWidth * boundMultiplier;
-  endpointBoundingBoxHeight = kEndpointBoundingBoxDefaultHeight * boundMultiplier;
     
-  traveledByMouse += traveled;
+    // Bounding box of random endpoint is larger if cursor is moving faster.
+    // This makes curves larger when cursor speed is faster.
+    endpointBoundingBoxWidth = kEndpointBoundingBoxDefaultWidth;
+    endpointBoundingBoxHeight = kEndpointBoundingBoxDefaultHeight;
+    float traveled = dist(pmouseX, pmouseY, mouseX, mouseY);
+    float boundMultiplier = .5 + (traveled / kTraveledByMouseBaseStepSize) / 2;
+    endpointBoundingBoxWidth = kEndpointBoundingBoxDefaultWidth * boundMultiplier;
+    endpointBoundingBoxHeight = kEndpointBoundingBoxDefaultHeight * boundMultiplier;
+      
+  
+    linesDrawn++;
+  } else {
+    saveFrame("wavy-line-######.tif");
+    exit();
+  }
 }
 
 
