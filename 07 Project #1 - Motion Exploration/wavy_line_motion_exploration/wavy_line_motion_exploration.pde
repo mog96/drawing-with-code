@@ -22,6 +22,16 @@ import processing.pdf.*;
 int kCanvasWidth = 700;
 int kCanvasHeight = 700;
 int kBorderWidth = 40;
+int kFrameWidth = kCanvasWidth + kBorderWidth * 2;
+int kFrameHeight = kCanvasHeight + kBorderWidth * 2;
+
+// Four directions of motion:
+//       0
+//       |
+// 3 ---- ---- 1
+//       |
+//       2
+int kMotionDirections = 4;
 
 float kCPBoundingBoxWidth = 100;
 float kCPBoundingBoxHeight = 100;
@@ -53,6 +63,7 @@ public class Curve {
   public Point endPoint;
   public Point cp1;
   public Point cp2;
+  public int motionDirection;
 }
 
 float endpointBoundingBoxWidth = kEndpointBoundingBoxDefaultWidth;
@@ -75,7 +86,22 @@ void draw() {
     
     beginRecord(PDF, "wavy-line.pdf");          // NOTE: MUST RENAME SAVED PDF TO AVOID IT BEING OVERWRITTEN BY FUTURE PROGRAM EXECUTION
     for (int i = 0; i < curves.size(); i++) {    
-      drawCurve(curves.get(i));
+      Curve curve = curves.get(i);
+      switch (curve.motionDirection) {
+        case 0:
+          curve.cp1.y -= 1;
+          curve.cp2.y -= 1;
+        case 1:
+          curve.cp1.x += 1;
+          curve.cp2.x += 1;
+        case 2:
+          curve.cp1.y += 1;
+          curve.cp2.y += 1;
+        default: // 3
+          curve.cp1.x -= 1;
+          curve.cp2.x -= 1;          
+      }
+      drawCurve(curve);
     }
     endRecord();
     
@@ -110,6 +136,7 @@ void addCurve() {
                                      endpointBoundingBoxHeight);
     newCurve.cp1 = getRandomPoint(newCurve.endPoint.x, newCurve.endPoint.y, kCPBoundingBoxWidth, kCPBoundingBoxHeight);
     newCurve.cp2 = getRandomPoint(newCurve.startPoint.x, newCurve.startPoint.y, kCPBoundingBoxWidth, kCPBoundingBoxHeight);
+    newCurve.motionDirection = int(random(0, kMotionDirections));
     curves.add(newCurve);
     
     println("NEW END POINT:", newCurve.endPoint.x, newCurve.endPoint.y);
@@ -146,6 +173,7 @@ void addCurve() {
                            lastCurve.endPoint.y + (lastCurve.endPoint.y - lastCurve.cp2.y));
   
   newCurve.cp2 = getRandomPoint(newCurve.endPoint.x, newCurve.endPoint.y, kCPBoundingBoxWidth, kCPBoundingBoxHeight);
+  newCurve.motionDirection = int(random(0, kMotionDirections));
   curves.add(newCurve);  
 }
 
