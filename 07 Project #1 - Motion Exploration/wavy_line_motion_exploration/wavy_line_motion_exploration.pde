@@ -87,6 +87,7 @@ void draw() {
     beginRecord(PDF, "wavy-line.pdf");          // NOTE: MUST RENAME SAVED PDF TO AVOID IT BEING OVERWRITTEN BY FUTURE PROGRAM EXECUTION
     for (int i = 0; i < curves.size(); i++) {    
       Curve curve = curves.get(i);
+      
       switch (curve.motionDirection) {
         case 0:
           curve.cp1.y -= 1;
@@ -99,8 +100,16 @@ void draw() {
           curve.cp2.y += 1;
         default: // 3
           curve.cp1.x -= 1;
-          curve.cp2.x -= 1;          
+          curve.cp2.x -= 1;
       }
+      
+      // FIXME: Operation -= above not working correctly, as indicated for print of curve with motion direction 0 or 3.
+      if (i == 5) {
+        println("MOTION DIRECTION:", curve.motionDirection);
+        println("CURVE CP1:", curve.cp1.x, curve.cp1.y);
+        println("CURVE CP2:", curve.cp2.x, curve.cp2.y);
+      }
+      
       drawCurve(curve);
     }
     endRecord();
@@ -127,6 +136,7 @@ void draw() {
 
 void addCurve() {  
   Curve newCurve = new Curve();
+  newCurve.motionDirection = int(random(0, kMotionDirections));
   
   if (curves.isEmpty()) {
     newCurve.startPoint = getRandomPoint(0, 0, kCanvasWidth, kCanvasHeight);
@@ -136,11 +146,7 @@ void addCurve() {
                                      endpointBoundingBoxHeight);
     newCurve.cp1 = getRandomPoint(newCurve.endPoint.x, newCurve.endPoint.y, kCPBoundingBoxWidth, kCPBoundingBoxHeight);
     newCurve.cp2 = getRandomPoint(newCurve.startPoint.x, newCurve.startPoint.y, kCPBoundingBoxWidth, kCPBoundingBoxHeight);
-    newCurve.motionDirection = int(random(0, kMotionDirections));
-    curves.add(newCurve);
-    
-    println("NEW END POINT:", newCurve.endPoint.x, newCurve.endPoint.y);
-    
+    curves.add(newCurve);    
     return;
   }
   
@@ -154,10 +160,8 @@ void addCurve() {
                                      min(max(0, newCurve.startPoint.y + kEndpointBoundingBoxCenterShiftMultiplier * (newCurve.startPoint.y - lastCurve.startPoint.y)), kCanvasHeight),
                                      endpointBoundingBoxWidth,
                                      endpointBoundingBoxHeight);
-  
-  
-  println("ENDPOINT:", newCurve.endPoint.x, newCurve.endPoint.y);   
-  
+    
+    
   // TODO: Make sure endpoint doesn't cause new curve to overlap existing curves. (As is, this code takes too long to execute.) 
   /*
   do {
@@ -166,6 +170,7 @@ void addCurve() {
   } while (intersectsExistingCurves(newCurve)); // NOTE: This check takes O(N) time, where N is number of curves.
   */
   
+  
   // First control point the of new curve is the reflection of the second control point of the old curve,
   // across the line that passes through the endpoint of the old curve perpendicular to the line between the
   // control points in question.
@@ -173,7 +178,6 @@ void addCurve() {
                            lastCurve.endPoint.y + (lastCurve.endPoint.y - lastCurve.cp2.y));
   
   newCurve.cp2 = getRandomPoint(newCurve.endPoint.x, newCurve.endPoint.y, kCPBoundingBoxWidth, kCPBoundingBoxHeight);
-  newCurve.motionDirection = int(random(0, kMotionDirections));
   curves.add(newCurve);  
 }
 
