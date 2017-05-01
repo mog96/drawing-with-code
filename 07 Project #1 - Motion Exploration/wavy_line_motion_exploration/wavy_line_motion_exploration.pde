@@ -19,6 +19,10 @@ Description:
 
 import processing.pdf.*;
 
+int kCanvasWidth = 700;
+int kCanvasHeight = 700;
+int kBorderWidth = 40;
+
 float kCPBoundingBoxWidth = 100;
 float kCPBoundingBoxHeight = 100;
 float kEndpointBoundingBoxDefaultWidth = 100;
@@ -27,7 +31,6 @@ float kEndpointBoundingBoxDefaultHeight = 100;
 float kEndpointBoundingBoxCenterShiftMultiplier = 0.6;
 float kTraveledByMouseThreshold = 20;
 float kTraveledByMouseBaseStepSize = 25;
-
 int kNumLinesToDraw = 1000;
 
 public class Point {
@@ -60,7 +63,7 @@ int linesDrawn = 0;
 
 void setup() {
   curves = new ArrayList<Curve>();
-  size(700, 700);
+  size(780, 780);                      // NOTE: MUST MANUALLY CONFIRM: size(kCanvasWidth + kBorderWidth * 2, kCanvasHeight + kBorderWidth * 2)
   background(255);
   frameRate(30);
 }
@@ -100,7 +103,7 @@ void addCurve() {
   Curve newCurve = new Curve();
   
   if (curves.isEmpty()) {
-    newCurve.startPoint = getRandomPoint(0, 0, width, height);
+    newCurve.startPoint = getRandomPoint(0, 0, kCanvasWidth, kCanvasHeight);
     newCurve.endPoint = getRandomPoint(max(0, newCurve.startPoint.x - endpointBoundingBoxWidth / 2),
                                      max(0, newCurve.startPoint.y - endpointBoundingBoxHeight / 2),
                                      endpointBoundingBoxWidth,
@@ -120,8 +123,8 @@ void addCurve() {
   
   // Center of bounding box for random endpoint is shifted in the direction of the preceding curve,
   // to help direct the line and reduce the abruptness of change in direction.
-  newCurve.endPoint = getRandomPoint(min(max(0, newCurve.startPoint.x + kEndpointBoundingBoxCenterShiftMultiplier * (newCurve.startPoint.x - lastCurve.startPoint.x)), width),
-                                     min(max(0, newCurve.startPoint.y + kEndpointBoundingBoxCenterShiftMultiplier * (newCurve.startPoint.y - lastCurve.startPoint.y)), height),
+  newCurve.endPoint = getRandomPoint(min(max(0, newCurve.startPoint.x + kEndpointBoundingBoxCenterShiftMultiplier * (newCurve.startPoint.x - lastCurve.startPoint.x)), kCanvasWidth),
+                                     min(max(0, newCurve.startPoint.y + kEndpointBoundingBoxCenterShiftMultiplier * (newCurve.startPoint.y - lastCurve.startPoint.y)), kCanvasHeight),
                                      endpointBoundingBoxWidth,
                                      endpointBoundingBoxHeight);
   
@@ -146,24 +149,26 @@ void addCurve() {
   curves.add(newCurve);  
 }
 
+// Ensures that each x is drawn within [kBorderWidth, kCanvasWidth + kBorderWidth * 2)
+// and that each y is drawn within [kBorderWidth, kCanvasHeight + kBorderWidth * 2).
 void drawCurve(Curve curve) {
   stroke(0);
-  curve(curve.cp1.x, curve.cp1.y,
-        curve.startPoint.x, curve.startPoint.y,
-        curve.endPoint.x, curve.endPoint.y,
-        curve.cp2.x, curve.cp2.y);
+  curve(curve.cp1.x + kBorderWidth, curve.cp1.y + kBorderWidth,
+        curve.startPoint.x + kBorderWidth, curve.startPoint.y + kBorderWidth,
+        curve.endPoint.x + kBorderWidth, curve.endPoint.y + kBorderWidth,
+        curve.cp2.x + kBorderWidth, curve.cp2.y + kBorderWidth);
   // fill(255, 105, 180); // Pink
   fill(83, 145, 234); 
-  ellipse(curve.cp1.x, curve.cp1.y, 2, 2);
-  ellipse(curve.cp2.x, curve.cp2.y, 2, 2);  
+  ellipse(curve.cp1.x + kBorderWidth, curve.cp1.y + kBorderWidth, 2, 2);
+  ellipse(curve.cp2.x + kBorderWidth, curve.cp2.y + kBorderWidth, 2, 2);
 }
 
 Point getRandomPoint(float centerX, float centerY, float boundingBoxWidth, float boundingBoxHeight) {
   float xMin = max(0, centerX - boundingBoxWidth / 2);
-  float xMax = min(xMin + boundingBoxWidth, width);
+  float xMax = min(xMin + boundingBoxWidth, kCanvasWidth);
   float x = random(xMin, xMax);
   float yMin = max(0, centerY - boundingBoxHeight / 2);
-  float yMax = min(yMin + boundingBoxHeight, height);
+  float yMax = min(yMin + boundingBoxHeight, kCanvasHeight);
   float y = random(yMin, yMax);
   
   Point point = new Point();
