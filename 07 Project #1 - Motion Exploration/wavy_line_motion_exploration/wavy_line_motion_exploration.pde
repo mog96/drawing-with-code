@@ -19,8 +19,8 @@ Description:
 
 import processing.pdf.*;
 
-int kCanvasWidth = 700;
-int kCanvasHeight = 700;
+int kCanvasWidth = 1880;   // Target: 1920
+int kCanvasHeight = 1040;  // Targer: 1080
 int kBorderWidth = 40;
 int kFrameWidth = kCanvasWidth + kBorderWidth * 2;
 int kFrameHeight = kCanvasHeight + kBorderWidth * 2;
@@ -41,7 +41,7 @@ float kEndpointBoundingBoxDefaultHeight = 100;
 float kEndpointBoundingBoxCenterShiftMultiplier = 0.6;
 float kTraveledByMouseThreshold = 20;
 float kTraveledByMouseBaseStepSize = 25;
-int kNumLinesToDraw = 1000;
+int kNumLinesToDraw = 2000;
 
 public class Point {
   public float x;
@@ -74,7 +74,7 @@ int linesDrawn = 0;
 
 void setup() {
   curves = new ArrayList<Curve>();
-  size(780, 780);                      // NOTE: MUST MANUALLY CONFIRM: size(kCanvasWidth + kBorderWidth * 2, kCanvasHeight + kBorderWidth * 2)
+  size(1920, 1080);                      // NOTE: MUST MANUALLY CONFIRM: size(kCanvasWidth + kBorderWidth * 2, kCanvasHeight + kBorderWidth * 2)
   background(255);
   frameRate(30);
 }
@@ -84,7 +84,7 @@ void draw() {
     addCurve();
     background(255);
     
-    beginRecord(PDF, "wavy-line.pdf");          // NOTE: MUST RENAME SAVED PDF TO AVOID IT BEING OVERWRITTEN BY FUTURE PROGRAM EXECUTION
+    // beginRecord(PDF, "wavy-line.pdf");          // NOTE: MUST RENAME SAVED PDF TO AVOID IT BEING OVERWRITTEN BY FUTURE PROGRAM EXECUTION
     for (int i = 0; i < curves.size(); i++) {    
       Curve curve = curves.get(i);
       
@@ -103,16 +103,19 @@ void draw() {
           curve.cp2.x -= 1;
       }
       
+      /*
       // FIXME: Operation -= above not working correctly, as indicated for print of curve with motion direction 0 or 3.
       if (i == 5) {
         println("MOTION DIRECTION:", curve.motionDirection);
         println("CURVE CP1:", curve.cp1.x, curve.cp1.y);
         println("CURVE CP2:", curve.cp2.x, curve.cp2.y);
       }
+      */
       
       drawCurve(curve);
     }
-    endRecord();
+    // endRecord();
+    saveFrame("movie/wavy-line-######.tif");
     
     // Bounding box of random endpoint is larger if cursor is moving faster.
     // This makes curves larger when cursor speed is faster.
@@ -126,7 +129,7 @@ void draw() {
   
     linesDrawn++;
   } else {
-    saveFrame("wavy-line-######.tif");
+    saveFrame("movie/wavy-line-######.tif");
     exit();
   }
 }
